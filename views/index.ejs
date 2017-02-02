@@ -5,10 +5,20 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <div>Welcome, <%= user.username %> </div>
-  
 
+    <% if (user){ %>
+    <div>Welcome, <%= user.username %> </div>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
+    <% } else {%>
+
+
+  Home page
+  <div>
+    <a href="/auth/google">Login with Google</a>
+    <a href="/auth/facebook">Login with Facebook</a>
+  </div>
+<% } %>
+
   </body>
 </html>

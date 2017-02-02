@@ -31,7 +31,7 @@ authController.post("/signup", (req, res, next) => {
     var hashPass = bcrypt.hashSync(password, salt);
 
     var newUser = new User({
-      username,
+      username: req.body.username,
       password: hashPass
     });
 
@@ -58,14 +58,67 @@ authController.post("/login", passport.authenticate("local", {
   passReqToCallback: true
 }));
 
-authController.get("/private-page", ensureLogin.ensureLoggedIn(), (req, res) => {
-  res.render("private", { user: req.user });
-});
+// authController.get("/private-page", ensureLogin.ensureLoggedIn(), (req, res) => {
+//   res.render("private", { user: req.user });
+// });
 
 authController.get("/logout", (req, res) => {
   req.logout();
   res.redirect("/login");
 });
+
+
+authController.get("/auth/facebook", passport.authenticate("facebook"));
+
+
+authController.get("/auth/facebook/callback", passport.authenticate("facebook", {
+  //successRedirect: "/private-page",
+  successRedirect: "/",
+  failureRedirect: "/"
+}));
+
+authController.get("/auth/google", passport.authenticate("google", {
+  scope: ["https://www.googleapis.com/auth/plus.login",
+          "https://www.googleapis.com/auth/plus.profile.emails.read"]
+}));
+
+authController.get("/auth/google/callback", passport.authenticate("google", {
+  //successRedirect: "/private-page",
+  successRedirect: "/",
+  failureRedirect: "/"
+}));
+
+
+// authController.get('/private', ensureAuthenticated, (req, res) => {
+//   res.render('private', {user: req.user});
+// });
+// old version - checks only if user is logged in, does not check role
+const checkGuest  = checkRoles('GUEST'); // from lesson, THESE NEED TO BE HERE, IT WILL BREAK IF THEY ARE DEFINED BELOW THE ROUTE WHERE THEY ARE USED
+const checkEditor = checkRoles('EDITOR');
+const checkAdmin  = checkRoles('ADMIN');
+
+authController.get('/private', checkAdmin, (req, res) => {
+  res.render('private', {user: req.user});
+});
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    res.redirect('/login')
+  }
+}
+
+
+function checkRoles(role) {
+  return function(req, res, next) {
+    if (req.isAuthenticated() && req.user.role === role) {
+      return next();
+    } else {
+      res.redirect('/login')
+    }
+  }
+}
 
 
 
